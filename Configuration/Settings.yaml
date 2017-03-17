@@ -1,0 +1,19 @@
+Sandstorm:
+  TemplateMailer:
+      # Sender Addresses. You can have as many as you want, defined by a string identifier.
+      # You can pass the sender adresses identifier to the sendTemplateEmail() method
+      # of the EmailService. If you pass an array, we will pass it through to swiftmailer and hope for the best ;)
+      senderAddresses:
+        default:
+          name: 'Sandstorm TemplateMailer'
+          address: 'test@example.com'
+      # These are the packages in which TemplateMailer will look for templates, in the Resources/EmailTemplates folder.
+      # If you use partials or layouts, they are expected in the Partials/ and Layouts/ subfolders of EmailTemplates.
+      # The array is sorted by the keys before template loading is done, so you can define overrides by just setting lower numbers as keys.
+      templatePackages: []
+        # 99999: 'Sandstorm.TemplateMailer' # This is just an example.
+
+      # You can pass arbitrary Settings paths here. They will be resolved and set on all email templates as default variables.
+      # If you pass values with the same keys during calls to sendTemplateEmail(), they will override these defaults.
+      defaultTemplateVariables:
+        baseUri: 'Neos.Flow.http.baseUri'

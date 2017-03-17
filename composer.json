@@ -1,0 +1,29 @@
+{
+    "name": "sandstorm/templatemailer",
+    "description": "Neos and Flow package for simple handling of template-based emails, including CSS inlining",
+    "type": "neos-package",
+    "keywords": ["email", "mail", "CSS", "mailer", "mail template", "Neos", "Flow"],
+    "homepage": "https://github.com/sandstorm/TemplateMailer",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bastian Heist",
+            "homepage": "https://www.sandstorm.de",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/sandstorm/TemplateMailer/issues",
+        "source": "https://github.com/sandstorm/TemplateMailer"
+    },
+    "require": {
+        "neos/flow": "^4.0",
+        "neos/swiftmailer": "^6.0",
+        "pelago/emogrifier": "^1.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sandstorm\\TemplateMailer\\": "Classes"
+        }
+    }
+}
