@@ -15,6 +15,10 @@ Sandstorm.TemplateMailer is currently being maintained for Neos 3.x / Flow 4.x.
 
 # Configuration and Usage
 
+## Configuring SwiftMailer
+The TemplateMailer package requires SwiftMailer to send out e-mails. Please check the swiftmailer package's
+configuration options (https://github.com/neos/swiftmailer) in order to configure SMTP credentials.
+
 ## Configuring the package
 This package provides 2 config options.
 
