@@ -114,7 +114,7 @@ class EmailService
     {
         $defaultVariables = [];
         foreach ($this->defaultTemplateVariables as $variableName => $configurationPath) {
-            $defaultVariables[$variableName] = $this->configurationManager->getConfiguration(ConfigurationManager::CONFIGURATION_PROCESSING_TYPE_SETTINGS, $configurationPath);
+            $defaultVariables[$variableName] = $this->configurationManager->getConfiguration(ConfigurationManager::CONFIGURATION_TYPE_SETTINGS, $configurationPath);
         }
         return $passedVariables + $defaultVariables;
     }
@@ -147,6 +147,11 @@ class EmailService
      */
     protected function findFirstPackageContainingEmailTemplate(string $templateName): string
     {
+        if (count($this->templatePackages) === 0) {
+            throw new Exception('No packages to load email templates from were registered. Please set the config path "Sandstorm.TemplateMailer.templatePackages" correctly!',
+                1489787278);
+        }
+
         ksort($this->templatePackages);
         foreach ($this->templatePackages as $package) {
             $templatePath = sprintf('resource://%s/Private/EmailTemplates/%s.html', $package, $templateName);
@@ -154,7 +159,7 @@ class EmailService
                 return $package;
             }
         }
-        throw new Exception(sprintf('No package containing an email template named "%s" was found. Checked packages: %s', $templateName, implode(', ', $this->templatePackages),
+        throw new Exception(sprintf('No package containing an email template named "%s" was found. Checked packages: "%s"', $templateName, implode(', ', $this->templatePackages),
             1489787275));
     }
 
