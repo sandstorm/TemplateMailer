@@ -3,7 +3,7 @@
 ## Features
 This package works in Neos CMS and Flow and provides the following functionality:
 
-* Simple creation and sending of template-based emails
+* Simple creation and sending of Fluid template-based emails
 * Automatic inlining of CSS into the email body, making it look good in clients like Gmail as well
 
 ## Compatibility and Maintenance
@@ -23,6 +23,14 @@ By adding entries to the `senderAddresses` config array, you can define sender a
 in your config and connect them to a string identifier. This allows for easy global maintenance
 of email sender addresses and names. Override the "default" entry to just have one global
 sender address that's automatically used everywhere without you having to do anything else.
+```YAML
+Sandstorm:
+  TemplateMailer:
+    senderAddresses:
+      yourGlobalSender:
+        name: 'Foo Bar'
+        address: 'baz@example.com'
+```
 
 ### Configuring template source packages
 You need to tell TemplateMailer in which packages it should look for email templates. Do this by adding an
