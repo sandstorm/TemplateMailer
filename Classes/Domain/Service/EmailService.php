@@ -13,6 +13,10 @@ use Sandstorm\TemplateMailer\Exception;
  */
 class EmailService
 {
+    const LOG_LEVEL_NONE = 'none';
+    const LOG_LEVEL_LOG = 'log';
+    const LOG_LEVEL_THROW = 'throw';
+
     /**
      * @Flow\Inject
      * @var \Neos\Flow\Log\SystemLoggerInterface
@@ -43,15 +47,38 @@ class EmailService
     protected $defaultTemplateVariables;
 
     /**
+     * @var string
+     * @Flow\InjectConfiguration(path="logging.sendingErrors")
+     */
+    protected $logSendingErrors;
+
+    /**
+     * @var string
+     * @Flow\InjectConfiguration(path="logging.sendingSuccess")
+     */
+    protected $logSendingSuccess;
+
+    /**
      * @param string $templateName name of the email template to use @see renderEmailBody()
      * @param string $subject subject of the email
-     * @param array $recipient recipient of the email in the format array('<emailAddress>')
-     * @param array $variables variables that will be available in the email template. in the format array('<key>' => '<value>', ....)
-     * @param string|array $sender Either an array with the format ['address@example.com' => 'Sender Name'], or a string which identifies a configured sender address
+     * @param array $recipient recipient of the email in the format ['<emailAddress>', ...]
+     * @param array $variables variables that will be available in the email template. in the format ['<key>' => '<value>', ...]
+     * @param string|array $sender Either an array with the format ['<emailAddress>' => 'Sender Name'], or a string which identifies a configured sender address
+     * @param array $cc ccs of the email in the format ['<emailAddress>', ...]
+     * @param array $bcc bccs of the email in the format ['<emailAddress>', ...]
+     * @param array $attachments attachment array in the format [['data' => '<attachmentbinary>' ,'filename' => '<filename>', 'contentType' => '<mimeType, e.g. application/pdf>'], ...]
      * @return boolean TRUE on success, otherwise FALSE
      */
-    public function sendTemplateEmail(string $templateName, string $subject, array $recipient, array $variables = [], $sender = 'default'): bool
-    {
+    public function sendTemplateEmail(
+        string $templateName,
+        string $subject,
+        array $recipient,
+        array $variables = [],
+        $sender = 'default',
+        array $cc = [],
+        array $bcc = [],
+        array $attachments = []
+    ): bool {
         $targetPackage = $this->findFirstPackageContainingEmailTemplate($templateName);
         $variables = $this->addDefaultTemplateVariables($variables);
         $plaintextBody = $this->renderEmailBody($templateName, $targetPackage, 'txt', $variables);
@@ -62,9 +89,17 @@ class EmailService
         $mail = new Message();
         $mail->setFrom($senderAddress)
             ->setTo($recipient)
+            ->setCc($cc)
+            ->setBcc($bcc)
             ->setSubject($subject)
             ->setBody($plaintextBody)
             ->addPart($htmlBody, 'text/html');
+
+        if (count($attachments) > 0) {
+            foreach ($attachments as $attachment) {
+                $mail->attach(new \Swift_Attachment($attachment['data'], $attachment['filename'], $attachment['contentType']));
+            }
+        }
 
         return $this->sendMail($mail);
     }
@@ -164,32 +199,50 @@ class EmailService
     }
 
     /**
-     * Sends a mail and creates a system logger entry if sending failed
+     * Sends a mail and logs or throws any errors, depending on configuration
      *
      * @param Message $mail
      * @return boolean TRUE on success, otherwise FALSE
+     * @throws \Exception
      */
     protected function sendMail(Message $mail): bool
     {
-        $numberOfRecipients = 0;
-        // ignore exceptions but log them
+        $allRecipients = $mail->getTo() + $mail->getCc() + $mail->getBcc();
+        $totalNumberOfRecipients = count($allRecipients);
+        $actualNumberOfRecipients = 0;
         $exceptionMessage = '';
-        try {
-            $numberOfRecipients = $mail->send();
-        } catch (\Exception $e) {
-            $this->systemLogger->logException($e);
-            $exceptionMessage = $e->getMessage();
-        }
-        if ($numberOfRecipients < 1) {
-            $this->systemLogger->log('Could not send email "' . $mail->getSubject() . '"', LOG_ERR, [
-                'exception' => $exceptionMessage,
-                'message' => $mail->getSubject(),
-                'id' => (string)$mail->getHeaders()->get('Message-ID')
-            ]);
 
+        try {
+            $actualNumberOfRecipients = $mail->send();
+        } catch (\Exception $e) {
+            $exceptionMessage = $e->getMessage();
+            if ($this->logSendingErrors === self::LOG_LEVEL_LOG) {
+                $this->systemLogger->logException($e);
+            } elseif ($this->logSendingErrors === self::LOG_LEVEL_THROW) {
+                throw $e;
+            }
+        }
+
+        $emailInfo = [
+            'recipients' => array_keys($mail->getTo() + $mail->getCc() + $mail->getBcc()),
+            'failedRecipients' => $mail->getFailedRecipients(),
+            'subject' => $mail->getSubject(),
+            'id' => (string)$mail->getHeaders()->get('Message-ID')
+        ];
+        if (strlen($exceptionMessage) > 0) {
+            $emailInfo['exception'] = $exceptionMessage;
+        }
+
+        if ($actualNumberOfRecipients < $totalNumberOfRecipients && $this->logSendingErrors === self::LOG_LEVEL_LOG) {
+            $this->systemLogger->log(
+                sprintf('Could not send an email to all given recipients. Given %s, sent to %s', $totalNumberOfRecipients, $actualNumberOfRecipients),
+                LOG_ERR, $emailInfo);
             return false;
         }
 
+        if ($this->logSendingSuccess === self::LOG_LEVEL_LOG) {
+            $this->systemLogger->log('Email sent successfully.', LOG_INFO, $emailInfo);
+        }
         return true;
     }
 }

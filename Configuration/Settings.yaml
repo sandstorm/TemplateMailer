@@ -17,3 +17,14 @@ Sandstorm:
     # If you pass values with the same keys during calls to sendTemplateEmail(), they will override these defaults.
     defaultTemplateVariables:
       baseUri: 'Neos.Flow.http.baseUri'
+
+    # via the "sendingErrors" config option, you can specifiy what templateMailer should do if the email could
+    # not be sent correctly. There are three options:
+    # * 'throw' -> throws the exception which came from SwiftMailer if sending failed
+    # * 'log' -> logs a message to the system log if sending failed
+    # * 'none' -> silently swallow errors without logging or throwing them
+    # For "sendingSuccess", you can only select 'log' or 'none'. 'log' will insert a log row for all sent emails.
+    # Since this can create lots of entries in your log file, use it for debugging purposes only.
+    logging:
+      sendingErrors: 'log'
+      sendingSuccess: 'log'
