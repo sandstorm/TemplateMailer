@@ -36,6 +36,12 @@ class EmailService
 
     /**
      * @var array
+     * @Flow\InjectConfiguration(path="replyToAddresses")
+     */
+    protected $replyToAddresses;
+
+    /**
+     * @var array
      * @Flow\InjectConfiguration(path="templatePackages")
      */
     protected $templatePackages;
@@ -67,6 +73,7 @@ class EmailService
      * @param array $cc ccs of the email in the format ['<emailAddress>', ...]
      * @param array $bcc bccs of the email in the format ['<emailAddress>', ...]
      * @param array $attachments attachment array in the format [['data' => '<attachmentbinary>' ,'filename' => '<filename>', 'contentType' => '<mimeType, e.g. application/pdf>'], ...]
+     * @param string|array|null $replyTo Either an array with the format ['<emailAddress>' => 'Reply To Name'], or a string which identifies a configured reply to address
      * @return boolean TRUE on success, otherwise FALSE
      */
     public function sendTemplateEmail(
@@ -77,7 +84,8 @@ class EmailService
         $sender = 'default',
         array $cc = [],
         array $bcc = [],
-        array $attachments = []
+        array $attachments = [],
+        $replyTo = null
     ): bool {
         $targetPackage = $this->findFirstPackageContainingEmailTemplate($templateName);
         $variables = $this->addDefaultTemplateVariables($variables);
@@ -94,6 +102,11 @@ class EmailService
             ->setSubject($subject)
             ->setBody($plaintextBody)
             ->addPart($htmlBody, 'text/html');
+
+        $replyToAddresses = $this->resolveReplyToAddress($replyTo);
+        if (count($replyToAddresses) > 0) {
+            $mail->setReplyTo($replyToAddresses);
+        }
 
         if (count($attachments) > 0) {
             foreach ($attachments as $attachment) {
@@ -161,18 +174,40 @@ class EmailService
      */
     protected function resolveSenderAddress($sender): array
     {
-        if (is_array($sender)) {
-            return $sender;
+        return $this->resolveAddress($sender, $this->senderAddresses, 'senderAddresses');
+    }
+
+    /**
+     * @param array|string $replyTo if it's an array, returns it directly. If it's a string, tries to find it in the config and resolve it.
+     * @return array
+     * @throws Exception
+     */
+    protected function resolveReplyToAddress($replyTo): array
+    {
+        return $this->resolveAddress($replyTo, $this->replyToAddresses, 'replyToAddresses');
+    }
+
+    /**
+     * @param array|string $addressKeyOrAddresses if it's an array, returns it directly. If it's a string, tries to find it in the config and resolve it.
+     * @param array $addressesConfig the configured addresses
+     * @param string $description a description for exception messages
+     * @return array
+     * @throws Exception
+     */
+    protected function resolveAddress($addressKeyOrAddresses, $addressesConfig, $description): array
+    {
+        if (is_array($addressKeyOrAddresses)) {
+            return $addressKeyOrAddresses;
         }
-        if (!isset($this->senderAddresses[$sender])) {
-            throw new Exception(sprintf('The given sender string was not found in config. Please check config path "Sandstorm.TemplateMailer.senderAddresses.%s".', $sender),
+        if (!isset($addressesConfig[$addressKeyOrAddresses])) {
+            throw new Exception(sprintf('The given address string was not found in config. Please check config path "Sandstorm.TemplateMailer.%s.%s".', $description, $addressKeyOrAddresses),
                 1489787274);
         }
-        if (!isset($this->senderAddresses[$sender]['name']) || !isset($this->senderAddresses[$sender]['address'])) {
-            throw new Exception(sprintf('The given sender is not correctly configured - "name" or "address" are missing. Please check config path "Sandstorm.TemplateMailer.senderAddresses.%s".',
-                $sender), 1489787274);
+        if (!isset($addressesConfig[$addressKeyOrAddresses]['name']) || !isset($addressesConfig[$addressKeyOrAddresses]['address'])) {
+            throw new Exception(sprintf('The given sender is not correctly configured - "name" or "address" are missing. Please check config path "Sandstorm.TemplateMailer.%s.%s".',
+                $description, $addressKeyOrAddresses), 1489787274);
         }
-        return [$this->senderAddresses[$sender]['address'] => $this->senderAddresses[$sender]['name']];
+        return [$addressesConfig[$addressKeyOrAddresses]['address'] => $addressesConfig[$addressKeyOrAddresses]['name']];
     }
 
     /**
