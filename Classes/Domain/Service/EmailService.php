@@ -184,7 +184,11 @@ class EmailService
      */
     protected function resolveReplyToAddress($replyTo): array
     {
-        return $this->resolveAddress($replyTo, $this->replyToAddresses, 'replyToAddresses');
+        if ($replyTo !== null) {
+            return $this->resolveAddress($replyTo, $this->replyToAddresses, 'replyToAddresses');
+        } else {
+            return [];
+        }
     }
 
     /**
