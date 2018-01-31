@@ -36,6 +36,20 @@ Sandstorm:
         address: 'baz@example.com'
 ```
 
+### Configuring global reply to addresses
+By adding entries to the `replyToAddresses` config array, you can define reply to addresses
+in your config and connect them to a string identifier. This allows for easy global maintenance
+of email reply to addresses and names. By default, no reply to address is used. To set a reply to address
+on the mail, you need to specify the reply to address key as method argument of `sendTemplateEmail`.
+```YAML
+Sandstorm:
+  TemplateMailer:
+    replyToAddresses:
+      yourGlobalReplyTo:
+        name: 'Foo Bar'
+        address: 'baz@example.com'
+```
+
 ### Configuring template source packages
 You need to tell TemplateMailer in which packages it should look for email templates. Do this by adding an
 entry to the `templatePackages` array, like so:

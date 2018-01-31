@@ -7,6 +7,13 @@ Sandstorm:
       default:
         name: 'Sandstorm TemplateMailer'
         address: 'test@example.com'
+    # Reply To Addresses. You can have as many as you want, defined by a string identifier.
+    # You can pass the reply to adresses identifier to the sendTemplateEmail() method
+    # of the EmailService. If you pass an array, we will pass it through to swiftmailer and hope for the best ;)
+    replyToAddresses:
+      default:
+        name: 'Sandstorm TemplateMailer'
+        address: 'test@example.com'
     # These are the packages in which TemplateMailer will look for templates, in the Resources/EmailTemplates folder.
     # If you use partials or layouts, they are expected in the Partials/ and Layouts/ subfolders of EmailTemplates.
     # The array is sorted by the keys before template loading is done, so you can define overrides by just setting lower numbers as keys.
