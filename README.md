@@ -135,6 +135,10 @@ $this->emailService->sendTemplateEmail(
     'YourTemplateFileName',
     'An arbitrary email title',
     ['recipient@example.com'],
+    [
+        'var1' => 'Foo',
+        'var2' => 5
+    ],
     ['sender@example.com' => 'Your Service Name']
 );
 ```
