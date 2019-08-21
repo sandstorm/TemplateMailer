@@ -3,9 +3,12 @@ namespace Sandstorm\TemplateMailer\Domain\Service;
 
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Configuration\ConfigurationManager;
+use Neos\Flow\Log\ThrowableStorageInterface;
+use Neos\Flow\Log\Utility\LogEnvironment;
 use Neos\FluidAdaptor\View\StandaloneView;
 use Neos\SwiftMailer\Message;
 use Pelago\Emogrifier;
+use Psr\Log\LoggerInterface;
 use Sandstorm\TemplateMailer\Exception;
 
 /**
@@ -19,9 +22,16 @@ class EmailService
 
     /**
      * @Flow\Inject
-     * @var \Neos\Flow\Log\SystemLoggerInterface
+     * @var LoggerInterface
      */
     protected $systemLogger;
+
+    /**
+     * @Flow\Inject
+     * @var ThrowableStorageInterface
+     */
+    protected $throwableStorage;
+
     /**
      * @Flow\Inject
      * @var ConfigurationManager
@@ -75,6 +85,8 @@ class EmailService
      * @param array $attachments attachment array in the format [['data' => '<attachmentbinary>' ,'filename' => '<filename>', 'contentType' => '<mimeType, e.g. application/pdf>'], ...]
      * @param string|array|null $replyTo Either an array with the format ['<emailAddress>' => 'Reply To Name'], or a string which identifies a configured reply to address
      * @return boolean TRUE on success, otherwise FALSE
+     * @throws Exception
+     * @throws \Neos\FluidAdaptor\Exception
      */
     public function sendTemplateEmail(
         string $templateName,
@@ -86,7 +98,8 @@ class EmailService
         array $bcc = [],
         array $attachments = [],
         $replyTo = null
-    ): bool {
+    ): bool
+    {
         $targetPackage = $this->findFirstPackageContainingEmailTemplate($templateName);
         $variables = $this->addDefaultTemplateVariables($variables);
         $plaintextBody = $this->renderEmailBody($templateName, $targetPackage, 'txt', $variables);
@@ -128,6 +141,7 @@ class EmailService
      * @param array $variables
      * @param bool $emogrify
      * @return string
+     * @throws \Neos\FluidAdaptor\Exception
      */
     public function renderEmailBody(string $templateName, string $templatePackage, string $format, array $variables, bool $emogrify = true): string
     {
@@ -157,6 +171,7 @@ class EmailService
     /**
      * @param array $passedVariables the template variables passed by the call to sendTemplateEmail().
      * @return array The passed array, merged with the default variables.
+     * @throws \Neos\Flow\Configuration\Exception\InvalidConfigurationTypeException
      */
     protected function addDefaultTemplateVariables(array $passedVariables): array
     {
@@ -256,7 +271,7 @@ class EmailService
         } catch (\Exception $e) {
             $exceptionMessage = $e->getMessage();
             if ($this->logSendingErrors === self::LOG_LEVEL_LOG) {
-                $this->systemLogger->logException($e);
+                $this->throwableStorage->logThrowable($e);
             } elseif ($this->logSendingErrors === self::LOG_LEVEL_THROW) {
                 throw $e;
             }
@@ -273,14 +288,14 @@ class EmailService
         }
 
         if ($actualNumberOfRecipients < $totalNumberOfRecipients && $this->logSendingErrors === self::LOG_LEVEL_LOG) {
-            $this->systemLogger->log(
+            $this->systemLogger->error(
                 sprintf('Could not send an email to all given recipients. Given %s, sent to %s', $totalNumberOfRecipients, $actualNumberOfRecipients),
-                LOG_ERR, $emailInfo);
+                array_merge($emailInfo, LogEnvironment::fromMethodName(__METHOD__)));
             return false;
         }
 
         if ($this->logSendingSuccess === self::LOG_LEVEL_LOG) {
-            $this->systemLogger->log('Email sent successfully.', LOG_INFO, $emailInfo);
+            $this->systemLogger->info('Email sent successfully.', array_merge($emailInfo, LogEnvironment::fromMethodName(__METHOD__)));
         }
         return true;
     }
