@@ -7,10 +7,12 @@ This package works in Neos CMS and Flow and provides the following functionality
 * Automatic inlining of CSS into the email body, making it look good in clients like Gmail as well
 
 ## Compatibility and Maintenance
-Sandstorm.TemplateMailer is currently being maintained for Neos 3.x / Flow 4.x.
+Sandstorm.TemplateMailer is currently being maintained for the following versions:
 
 | Neos / Flow Version        | Sandstorm.TemplateMailer Version | Maintained |
 |----------------------------|----------------------------------|------------|
+| Neos 5.x, Flow 6.x         | 2.x                              | Yes        |
+| Neos 4.x, Flow 5.x         | 1.x                              | Yes        |
 | Neos 3.x, Flow 4.x         | 1.x                              | Yes        |
 
 # Configuration and Usage

@@ -7,7 +7,7 @@ use Neos\Flow\Log\ThrowableStorageInterface;
 use Neos\Flow\Log\Utility\LogEnvironment;
 use Neos\FluidAdaptor\View\StandaloneView;
 use Neos\SwiftMailer\Message;
-use Pelago\Emogrifier;
+use Pelago\Emogrifier\CssInliner;
 use Psr\Log\LoggerInterface;
 use Sandstorm\TemplateMailer\Exception;
 
@@ -161,8 +161,7 @@ class EmailService
         // Emogrify - this will inline any styles in the HTML for proper display in Gmail.
         $emogrifiedFormats = ['htm', 'html'];
         if ($emogrify && in_array($format, $emogrifiedFormats)) {
-            $emogrifier = new Emogrifier($emailBody);
-            $emailBody = $emogrifier->emogrify();
+            $emailBody = CssInliner::fromHtml($html)->inlineCss()->render();
         }
 
         return $emailBody;
