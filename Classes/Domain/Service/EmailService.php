@@ -161,7 +161,7 @@ class EmailService
         // Emogrify - this will inline any styles in the HTML for proper display in Gmail.
         $emogrifiedFormats = ['htm', 'html'];
         if ($emogrify && in_array($format, $emogrifiedFormats)) {
-            $emailBody = CssInliner::fromHtml($html)->inlineCss()->render();
+            $emailBody = CssInliner::fromHtml($emailBody)->inlineCss()->render();
         }
 
         return $emailBody;
