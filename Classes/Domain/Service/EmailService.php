@@ -247,8 +247,8 @@ class EmailService
                 return $package;
             }
         }
-        throw new Exception(sprintf('No package containing an email template named "%s" was found. Checked packages: "%s"', $templateName, implode(', ', $this->templatePackages),
-            1489787275));
+        throw new Exception(sprintf('No package containing an email template named "%s" was found. Checked packages: "%s"', $templateName, implode(', ', $this->templatePackages)),
+            1489787275);
     }
 
     /**
