@@ -84,6 +84,7 @@ class EmailService
      * @param array $bcc bccs of the email in the format ['<emailAddress>', ...]
      * @param array $attachments attachment array in the format [['data' => '<attachmentbinary>' ,'filename' => '<filename>', 'contentType' => '<mimeType, e.g. application/pdf>'], ...]
      * @param string|array|null $replyTo Either an array with the format ['<emailAddress>' => 'Reply To Name'], or a string which identifies a configured reply to address
+     * @param array $additionalHeaders additional headers in the format ['<key>' => '<value>', ...]
      * @return boolean TRUE on success, otherwise FALSE
      * @throws Exception
      * @throws \Neos\FluidAdaptor\Exception
@@ -97,7 +98,8 @@ class EmailService
         array $cc = [],
         array $bcc = [],
         array $attachments = [],
-        $replyTo = null
+        $replyTo = null,
+        array $additionalHeaders = []
     ): bool
     {
         $targetPackage = $this->findFirstPackageContainingEmailTemplate($templateName);
@@ -119,6 +121,12 @@ class EmailService
         $replyToAddresses = $this->resolveReplyToAddress($replyTo);
         if (count($replyToAddresses) > 0) {
             $mail->setReplyTo($replyToAddresses);
+        }
+
+        if (count($additionalHeaders) > 0) {
+            foreach ($additionalHeaders as $additionalHeaderName => $additionalHeaderValue) {
+                $mail->getHeaders()->addTextHeader($additionalHeaderName, $additionalHeaderValue);
+            }
         }
 
         if (count($attachments) > 0) {
