@@ -17,7 +17,7 @@
         "source": "https://github.com/sandstorm/TemplateMailer"
     },
     "require": {
-        "neos/flow": "^6.0 || ^7.0 || dev-master",
+        "neos/flow": "^6.0 || ^7.0 || ^8.0 || dev-master",
         "neos/swiftmailer": "^7.0",
         "pelago/emogrifier": "^6.0"
     },
