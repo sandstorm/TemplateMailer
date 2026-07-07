@@ -20,7 +20,7 @@
         "neos/flow": "^8.3 || ^9.0 || dev-main",
         "neos/symfonymailer": "^1.0",
         "pelago/emogrifier": "^6.0 || ^7.0",
-        "neos/fluid-adaptor": "^9.1"
+        "neos/fluid-adaptor": "^8.3 || ^9.1"
     },
     "autoload": {
         "psr-4": {
